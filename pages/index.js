@@ -1,131 +1,69 @@
-import Head from 'next/head';
-import styles from '../styles/Home.module.css';
+import * as React from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { Container, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Box, alpha, IconButton, Typography,FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import { useRouter } from 'next/router';
+import { getPlayers, getMatches } from '../lib/dbQueries';
+import AlertDialogSlide from '../lib/deleteDialog';
+import GameContext from '../context/GameContext';
+import AlertContext from '../context/alertContext';
+import CustomAlert from '../components/ErrorAlert'
+import MatchTable from '../components/MatchesTable';
+import ScoreboardTable from '../components/ScoreboardTable';
+import GameSelector from '../components/GameSelector';
+import { useSession } from 'next-auth/react';
+import { signIn } from 'next-auth/react'
+import SignInBox from '../components/SignIn'
 
 export default function Home() {
+  const [allMatches, setAllMatches] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [currentMatch, setCurrentMatch] = useState();
+
+  const {data: session, status } = useSession()
+  const router = useRouter();
+  const { alertState, setAlertState } = useContext(AlertContext)
+
+  console.log('DATA FROM SESSION ',session, status)
+  console.log('ENV STUFF ',process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID)
+
+  const navigateTo = (path) => {
+    router.push(path);
+  };
+
   return (
-    <div className={styles.container}>
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+    <Container sx={{ backgroundColor: '#f0f2f5', padding: '1rem', borderRadius: '8px' }}>
+      <SignInBox></SignInBox>
+      {alertState.map((alert) => {return alert})}
+      <AlertDialogSlide match={currentMatch} open={open} setOpen={setOpen} setAllMatches={setAllMatches} />
+      <Box sx={{ my: 4 }}>
+        <Typography variant="h4" component="h1" gutterBottom align='center'>
+          Scoreboard
+        </Typography>
+        <ScoreboardTable  allMatches={allMatches} setAllMatches={setAllMatches} />
 
-      <main>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing <code>pages/index.js</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
-
-      <footer>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel" className={styles.logo} />
-        </a>
-      </footer>
-
-      <style jsx>{`
-        main {
-          padding: 5rem 0;
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-        }
-        footer {
-          width: 100%;
-          height: 100px;
-          border-top: 1px solid #eaeaea;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-        footer img {
-          margin-left: 0.5rem;
-        }
-        footer a {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          text-decoration: none;
-          color: inherit;
-        }
-        code {
-          background: #fafafa;
-          border-radius: 5px;
-          padding: 0.75rem;
-          font-size: 1.1rem;
-          font-family:
-            Menlo,
-            Monaco,
-            Lucida Console,
-            Liberation Mono,
-            DejaVu Sans Mono,
-            Bitstream Vera Sans Mono,
-            Courier New,
-            monospace;
-        }
-      `}</style>
-
-      <style jsx global>{`
-        html,
-        body {
-          padding: 0;
-          margin: 0;
-          font-family:
-            -apple-system,
-            BlinkMacSystemFont,
-            Segoe UI,
-            Roboto,
-            Oxygen,
-            Ubuntu,
-            Cantarell,
-            Fira Sans,
-            Droid Sans,
-            Helvetica Neue,
-            sans-serif;
-        }
-        * {
-          box-sizing: border-box;
-        }
-      `}</style>
-    </div>
+        <Typography variant="h4" component="h1" gutterBottom align='center'>
+          All Matches
+        </Typography>
+        <MatchTable allMatches={allMatches} setAllMatches={setAllMatches} setCurrentMatch={setCurrentMatch} setOpen={setOpen}/>
+      
+        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', gap: 2 }}>
+          <Button variant="contained" color="primary" onClick={() => navigateTo('/add-match')}>
+            Add 1v1 match
+          </Button>
+          <Button variant="contained" color="primary" onClick={() => navigateTo('/add-team-match')}>
+            Add 2v2 match
+          </Button>
+          <Button variant="contained" color="secondary" onClick={() => navigateTo('/players')}>
+            Add new player
+          </Button>
+          <Button variant="contained" color="secondary" onClick={() => signIn()}>
+            Sign In
+          </Button>
+          <GameSelector/>
+        </Box>
+      </Box>
+    </Container>
   );
 }

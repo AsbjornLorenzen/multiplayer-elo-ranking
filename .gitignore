@@ -1,5 +1,3 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
 /node_modules
 /.pnp
@@ -13,6 +11,7 @@
 /out/
 
 # production
+/dist
 /build
 
 # misc
@@ -28,3 +27,20 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+
+# certificates
+*.pem
+
+# IDE-specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# temporary files
+todo.txt
+*.tmp
+
+# miscellaneous
+coverage/
+*.log
